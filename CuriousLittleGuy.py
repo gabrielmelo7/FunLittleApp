@@ -12,7 +12,7 @@ def load_image_from_url(url):
     return img
 
 st.set_page_config(
-    page_title="Teste",
+    page_title="...",
     page_icon="🤔",
     layout="centered",
     initial_sidebar_state="collapsed"
