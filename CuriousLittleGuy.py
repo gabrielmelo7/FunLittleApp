@@ -1,21 +1,15 @@
-from deepface import DeepFace
 import tempfile
-import cv2
+from PIL import Image
 import numpy as np
 from DefinitiveVersion import img_verification
-from Decoder import decode
 import streamlit as st
-import os
 import requests
-from PIL import Image
-from io import BytesIO
+import io
 
 def load_image_from_url(url):
     response = requests.get(url)
-    image_array = np.asarray(bytearray(response.content), dtype=np.uint8)
-    img = cv2.imdecode(image_array, -1)  # -1 para carregar a imagem no formato original
+    img = Image.open(io.BytesIO(response.content))
     return img
-
 
 st.set_page_config(
     page_title="Teste",
@@ -41,23 +35,23 @@ st.title('Quem é você?')
 
 # Câmera ou upload
 img_file_buffer = st.camera_input("Cam1", label_visibility="hidden")
-if img_file_buffer != None:
-    bytes_photo = img_file_buffer.getvalue()
-    cv2_img = cv2.imdecode(np.frombuffer(bytes_photo, np.uint8), cv2.IMREAD_COLOR)
-    
-    # Uso de diretório temporário
+if img_file_buffer is not None:
+    # Lendo a imagem com PIL
+    img = Image.open(img_file_buffer)
+
+    # Salvando a imagem no diretório temporário
     with tempfile.TemporaryDirectory() as directory:
         img_name = f"{directory}/captured_image.jpg"
-        cv2.imwrite(img_name, cv2_img)
+        img.save(img_name)
 
-        #Caminho relativo para o arquivo de referência
+        # Caminho relativo para o arquivo de referência
         reference_url = st.secrets["general"]["image_url"]
         reference_img = load_image_from_url(reference_url)
 
         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
             temp_file_path = temp_file.name
-            cv2.imwrite(temp_file_path, reference_img)
-        
+            reference_img.save(temp_file_path)
+
         # Verificação
         with st.spinner('Hmmmm'):
             result = img_verification(img_name, temp_file_path)
